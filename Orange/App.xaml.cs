@@ -19,6 +19,15 @@ public partial class App : Application
     {
         base.OnStartup(e);
 
+        // Windows blocks drag & drop from Explorer into elevated apps (UIPI),
+        // so if we were started as admin, restart as a normal user via Explorer.
+        if (IsElevated() && !e.Args.Contains("--allow-admin"))
+        {
+            System.Diagnostics.Process.Start("explorer.exe", $"\"{Environment.ProcessPath}\"");
+            Shutdown();
+            return;
+        }
+
         _singleInstance = new Mutex(true, "Orange.SingleInstance", out bool isFirst);
         if (!isFirst)
         {
@@ -69,6 +78,12 @@ public partial class App : Application
         if (dlg.ShowDialog() != true) return;
         var pos = Forms.Cursor.Position;
         _wheel!.ShowForFiles(dlg.FileNames, WheelMode.Convert, pos.X, pos.Y);
+    }
+
+    private static bool IsElevated()
+    {
+        using var id = System.Security.Principal.WindowsIdentity.GetCurrent();
+        return new System.Security.Principal.WindowsPrincipal(id).IsInRole(System.Security.Principal.WindowsBuiltInRole.Administrator);
     }
 
     public void Notify(string title, string text, bool error = false)
