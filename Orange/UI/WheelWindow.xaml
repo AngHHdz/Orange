@@ -6,7 +6,7 @@
         WindowStyle="None" AllowsTransparency="True" Background="Transparent"
         ResizeMode="NoResize" ShowInTaskbar="False" Topmost="True" ShowActivated="False"
         AllowDrop="True">
-    <Grid x:Name="Root" Opacity="0" RenderTransformOrigin="0.5,0.46">
+    <Grid x:Name="Root" Opacity="0" RenderTransformOrigin="0.5,0.4651">
         <Grid.RenderTransform>
             <ScaleTransform x:Name="Zoom" ScaleX="0.85" ScaleY="0.85" />
         </Grid.RenderTransform>

@@ -20,6 +20,9 @@ public partial class WheelWindow : Window
 {
     private const double Cx = 200, Cy = 200, OuterR = 190, InnerR = 64;
 
+    /// <summary>Visual size of the wheel (1 = 400 px). Hit-testing works in unscaled coordinates, so only this changes.</summary>
+    private const double WheelScale = 0.8;
+
     private static readonly Brush SliceBrush = Freeze(new SolidColorBrush(Color.FromArgb(0xEB, 0x22, 0x22, 0x26)));
     private static readonly Brush SliceHotBrush = Freeze(new SolidColorBrush(Color.FromRgb(0xFF, 0x8A, 0x1F)));
     private static readonly Brush TabOn = Freeze(new SolidColorBrush(Color.FromRgb(0xFF, 0x8A, 0x1F)));
@@ -79,7 +82,7 @@ public partial class WheelWindow : Window
             (int)(x - Cx * dpi.DpiScaleX), (int)(y - Cy * dpi.DpiScaleY), 0, 0,
             Native.SWP_NOSIZE | Native.SWP_NOACTIVATE | Native.SWP_SHOWWINDOW);
 
-        Animate(1, 1);
+        Animate(1, WheelScale);
     }
 
     public void HideWheel()
@@ -311,8 +314,8 @@ public partial class WheelWindow : Window
         var d = new Duration(TimeSpan.FromMilliseconds(140));
         var ease = new CubicEase { EasingMode = EasingMode.EaseOut };
         Root.BeginAnimation(OpacityProperty, new DoubleAnimation(0, opacity, d) { EasingFunction = ease });
-        Zoom.BeginAnimation(ScaleTransform.ScaleXProperty, new DoubleAnimation(0.85, scale, d) { EasingFunction = ease });
-        Zoom.BeginAnimation(ScaleTransform.ScaleYProperty, new DoubleAnimation(0.85, scale, d) { EasingFunction = ease });
+        Zoom.BeginAnimation(ScaleTransform.ScaleXProperty, new DoubleAnimation(scale * 0.85, scale, d) { EasingFunction = ease });
+        Zoom.BeginAnimation(ScaleTransform.ScaleYProperty, new DoubleAnimation(scale * 0.85, scale, d) { EasingFunction = ease });
     }
 
     private static T Freeze<T>(T f) where T : Freezable { f.Freeze(); return f; }
