@@ -28,6 +28,7 @@ public static class Office
     public static Task<string> WordConvertAsync(string input, string ext) => RunSta(() =>
     {
         var output = Paths.Output(input, ext);
+        if (FileKinds.Ext(input) == "pdf") DisablePdfConvertWarning();
         dynamic word = Create("Word.Application");
         dynamic? doc = null;
         try
@@ -138,6 +139,43 @@ public static class Office
             Release(ppt);
         }
     });
+
+    /// <summary>Builds a deck with one full-slide picture per image (used for PDF → PPTX).</summary>
+    public static Task<string> ImagesToPptxAsync(IReadOnlyList<string> images, double widthPt, double heightPt, string output) => RunSta(() =>
+    {
+        dynamic ppt = Create("PowerPoint.Application");
+        dynamic? pres = null;
+        try
+        {
+            ppt.DisplayAlerts = 1;
+            pres = ppt.Presentations.Add(WithWindow: 0);
+            pres.PageSetup.SlideWidth = (float)widthPt;
+            pres.PageSetup.SlideHeight = (float)heightPt;
+            for (int i = 0; i < images.Count; i++)
+            {
+                dynamic slide = pres.Slides.Add(i + 1, 12); // ppLayoutBlank
+                slide.Shapes.AddPicture(FileName: images[i], LinkToFile: 0, SaveWithDocument: -1,
+                                        Left: 0, Top: 0, Width: (float)widthPt, Height: (float)heightPt);
+                Release(slide);
+            }
+            pres.SaveAs(FileName: output, FileFormat: 24);
+            return output;
+        }
+        finally
+        {
+            if (pres != null) { pres.Close(); Release(pres); }
+            if (ppt.Presentations.Count == 0) ppt.Quit();
+            Release(ppt);
+        }
+    });
+
+    /// <summary>Word asks "Word will now convert your PDF…" in an invisible dialog, which would hang
+    /// the conversion. This is the per-user switch for that message.</summary>
+    private static void DisablePdfConvertWarning()
+    {
+        using var key = Microsoft.Win32.Registry.CurrentUser.CreateSubKey(@"Software\Microsoft\Office\16.0\Word\Options");
+        key.SetValue("DisableConvertPdfWarning", 1, Microsoft.Win32.RegistryValueKind.DWord);
+    }
 
     // ── Plumbing ──────────────────────────────────────────────────────────
 

@@ -36,6 +36,7 @@ public partial class App : Application
         }
 
         Tools.Initialize();
+        PdfSharp.Fonts.GlobalFontSettings.UseWindowsFontsUnderWindows = true; // Arial etc. for page numbers and watermarks
 
         _wheel = new WheelWindow();
         _watcher = new DragWatcher();

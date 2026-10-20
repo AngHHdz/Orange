@@ -12,6 +12,13 @@ public static class Catalog
     {
         if (paths.Count == 0) return [];
         var kind = FileKinds.Common(paths);
+
+        // PDFs mixed with images can still be merged into one PDF.
+        if (kind == FileKind.Other && mode != WheelMode.Actions
+            && paths.All(p => FileKinds.Of(p) is FileKind.Pdf or FileKind.Image)
+            && paths.Any(p => FileKinds.Of(p) == FileKind.Pdf))
+            return [MergePdf(), .. PackItems()];
+
         var items = mode switch
         {
             WheelMode.Convert => ConvertItems(kind, paths),
@@ -52,6 +59,18 @@ public static class Catalog
                 foreach (var ext in new[] { "mp3", "m4a", "wav", "flac", "ogg", "opus", "aiff", "wma" }.Where(e => !Same(e)))
                     yield return new WheelItem(ext.ToUpperInvariant(), AudioHint(ext),
                         JobRunner.PerFile($"Convert to {ext.ToUpperInvariant()}", f => FfmpegTo(f, ext, Ffmpeg.AudioArgs(ext))));
+                break;
+
+            case FileKind.Pdf:
+                if (paths.Count > 1) yield return MergePdf();
+                yield return new WheelItem("DOCX", "Word", JobRunner.PerFile("PDF → Word", f => Pdf.ToDocumentAsync(f, "docx")));
+                yield return new WheelItem("JPG", "page images", JobRunner.PerFile("PDF → JPG", f => Pdf.ToImagesAsync(f, "jpg")));
+                yield return new WheelItem("PNG", "page images", JobRunner.PerFile("PDF → PNG", f => Pdf.ToImagesAsync(f, "png")));
+                yield return new WheelItem("TXT", "plain text", JobRunner.PerFile("PDF → Text", Pdf.ToTextAsync));
+                yield return new WheelItem("PPTX", "slides", JobRunner.PerFile("PDF → PowerPoint", Pdf.ToPptxAsync));
+                foreach (var ext in new[] { "md", "epub", "html", "rtf", "odt" })
+                    yield return new WheelItem(ext.ToUpperInvariant(), DocHint(ext),
+                        JobRunner.PerFile($"PDF → {ext.ToUpperInvariant()}", f => Pdf.ToDocumentAsync(f, ext)));
                 break;
 
             case FileKind.Document:
@@ -98,6 +117,9 @@ public static class Catalog
         }
     }
 
+    private static WheelItem MergePdf() =>
+        new("Merge", "into one PDF", JobRunner.AllFiles("Merge PDF", Pdf.MergeAsync));
+
     private static IEnumerable<WheelItem> PackItems() => Archives.PackFormats.Select(fmt =>
         new WheelItem(fmt.ToUpperInvariant(), "compress", JobRunner.AllFiles($"Pack as {fmt.ToUpperInvariant()}", items => Archives.PackAsync(items, fmt))));
 
@@ -120,8 +142,43 @@ public static class Catalog
                     f => Images.EditAsync(f, "bw", img => img.Grayscale())));
                 yield return new WheelItem("Clean", "remove metadata", JobRunner.PerFile("Remove metadata",
                     f => Images.EditAsync(f, "clean", img => img.Strip())));
+                yield return new WheelItem("Text", "read (OCR)", JobRunner.PerFile("OCR", Pdf.OcrAsync));
                 if (paths.Count > 1)
                     yield return new WheelItem("Merge", "into PDF", JobRunner.AllFiles("Images → PDF", Images.ToPdfAsync));
+                break;
+
+            case FileKind.Pdf:
+                if (paths.Count > 1) yield return MergePdf();
+                yield return new WheelItem("Split", "every page", JobRunner.PerFile("Split", Pdf.SplitAllAsync));
+                yield return new WheelItem("Compress", "smaller PDF", JobRunner.PerFile("Compress PDF", Pdf.CompressAsync));
+                yield return new WheelItem("Split…", "by ranges", files =>
+                {
+                    var ranges = PromptWindow.Ask("Split PDF", "One new PDF per range, separated by commas.\nExample: 1-3, 4-6, 7-", "1-");
+                    return ranges == null ? Task.CompletedTask : JobRunner.PerFile("Split", f => Pdf.SplitRangesAsync(f, ranges))(files);
+                }, OnUiThread: true);
+                yield return new WheelItem("Extract…", "some pages", files =>
+                {
+                    var ranges = PromptWindow.Ask("Extract pages", "Which pages go into the new PDF?\nExample: 1, 3, 5-7", "1");
+                    return ranges == null ? Task.CompletedTask : JobRunner.PerFile("Extract pages", f => Pdf.ExtractAsync(f, ranges))(files);
+                }, OnUiThread: true);
+                yield return new WheelItem("Rotate", "90° right", JobRunner.PerFile("Rotate", Pdf.RotateAsync));
+                yield return new WheelItem("Numbers", "page 1 / N", JobRunner.PerFile("Page numbers", Pdf.NumberPagesAsync));
+                yield return new WheelItem("Watermark…", "diagonal text", files =>
+                {
+                    var text = PromptWindow.Ask("Watermark", "Text to stamp across every page:", "CONFIDENTIAL");
+                    return text == null ? Task.CompletedTask : JobRunner.PerFile("Watermark", f => Pdf.WatermarkAsync(f, text))(files);
+                }, OnUiThread: true);
+                yield return new WheelItem("Protect…", "password", files =>
+                {
+                    var pw = PromptWindow.Ask("Protect PDF", "Password needed to open the new PDF:", password: true);
+                    return pw == null ? Task.CompletedTask : JobRunner.PerFile("Protect", f => Pdf.ProtectAsync(f, pw))(files);
+                }, OnUiThread: true);
+                yield return new WheelItem("Unlock…", "remove password", files =>
+                {
+                    var pw = PromptWindow.Ask("Unlock PDF", "Current password of the PDF:", password: true);
+                    return pw == null ? Task.CompletedTask : JobRunner.PerFile("Unlock", f => Pdf.UnlockAsync(f, pw))(files);
+                }, OnUiThread: true);
+                yield return new WheelItem("OCR", "scan → text", JobRunner.PerFile("OCR", Pdf.OcrAsync));
                 break;
 
             case FileKind.Video:

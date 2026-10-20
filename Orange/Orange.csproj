@@ -2,7 +2,9 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net8.0-windows</TargetFramework>
+    <!-- Windows 10 2004+ target unlocks the built-in PDF renderer (Windows.Data.Pdf) and OCR (Windows.Media.Ocr). -->
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
@@ -20,6 +22,9 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Magick.NET-Q8-AnyCPU" Version="15.0.0" />
+    <PackageReference Include="PdfPig" Version="0.1.16" />
+    <!-- Pinned: 6.2.4 is the last MIT release. 6.5+ is AGPL/commercial and refuses to run without a license. -->
+    <PackageReference Include="PDFsharp" Version="6.2.4" />
     <PackageReference Include="SharpCompress" Version="0.50.7" />
   </ItemGroup>
 

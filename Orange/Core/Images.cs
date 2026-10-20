@@ -78,6 +78,17 @@ public static class Images
         return output;
     });
 
+    /// <summary>One-page PDF of an image in the temp folder (used when merging images with PDFs).</summary>
+    public static string ToTempPdf(string input)
+    {
+        var output = Path.Combine(Path.GetTempPath(), $"orange-{Guid.NewGuid():N}.pdf");
+        using var img = Load(input);
+        img.BackgroundColor = MagickColors.White;
+        img.Alpha(AlphaAction.Remove);
+        img.Write(output, MagickFormat.Pdf);
+        return output;
+    }
+
     private static MagickImage Load(string path)
     {
         var img = new MagickImage(path);
