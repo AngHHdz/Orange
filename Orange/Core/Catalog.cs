@@ -53,8 +53,53 @@ public static class Catalog
                     yield return new WheelItem(ext.ToUpperInvariant(), AudioHint(ext),
                         JobRunner.PerFile($"Convert to {ext.ToUpperInvariant()}", f => FfmpegTo(f, ext, Ffmpeg.AudioArgs(ext))));
                 break;
+
+            case FileKind.Document:
+            case FileKind.Ebook:
+                foreach (var ext in Docs.TargetsFor(paths[0]).Where(e => !Same(e)))
+                    yield return new WheelItem(ext.ToUpperInvariant(), DocHint(ext),
+                        JobRunner.PerFile($"Convert to {ext.ToUpperInvariant()}", f => Docs.ConvertAsync(f, ext)));
+                break;
+
+            case FileKind.Spreadsheet:
+                foreach (var ext in Office.ExcelTargets.Where(e => !Same(e)))
+                    yield return new WheelItem(ext.ToUpperInvariant(), SheetHint(ext),
+                        JobRunner.PerFile($"Convert to {ext.ToUpperInvariant()}", f => Office.ExcelConvertAsync(f, ext)));
+                break;
+
+            case FileKind.Presentation:
+                foreach (var ext in Office.PowerPointTargets.Where(e => !Same(e)))
+                    yield return new WheelItem(ext.ToUpperInvariant(), ext == "pdf" ? "handout" : "slides",
+                        JobRunner.PerFile($"Convert to {ext.ToUpperInvariant()}", f => Office.PowerPointConvertAsync(f, ext)));
+                yield return new WheelItem("PNG", "image per slide",
+                    JobRunner.PerFile("Slides → PNG", f => Office.PowerPointConvertAsync(f, "png")));
+                yield return new WheelItem("JPG", "image per slide",
+                    JobRunner.PerFile("Slides → JPG", f => Office.PowerPointConvertAsync(f, "jpg")));
+                break;
+
+            case FileKind.Archive:
+                yield return new WheelItem("Extract", "to folder", JobRunner.PerFile("Extract", Archives.ExtractAsync));
+                foreach (var fmt in Archives.PackFormats.Where(e => !Same(e)))
+                    yield return new WheelItem(fmt.ToUpperInvariant(), "repack",
+                        JobRunner.PerFile($"Repack as {fmt.ToUpperInvariant()}", f => Archives.RepackAsync(f, fmt)));
+                break;
+
+            case FileKind.Subtitle:
+                foreach (var ext in new[] { "srt", "vtt", "txt" }.Where(e => !Same(e)))
+                    yield return new WheelItem(ext.ToUpperInvariant(), ext == "txt" ? "text only" : "subtitles",
+                        JobRunner.PerFile($"Convert to {ext.ToUpperInvariant()}", f => Subtitles.ConvertAsync(f, ext)));
+                break;
+
+            // Folders and mixed selections can always be packed.
+            case FileKind.Folder:
+            case FileKind.Other:
+                foreach (var item in PackItems()) yield return item;
+                break;
         }
     }
+
+    private static IEnumerable<WheelItem> PackItems() => Archives.PackFormats.Select(fmt =>
+        new WheelItem(fmt.ToUpperInvariant(), "compress", JobRunner.AllFiles($"Pack as {fmt.ToUpperInvariant()}", items => Archives.PackAsync(items, fmt))));
 
     // ── Tools (Ctrl) ──────────────────────────────────────────────────────
 
@@ -105,6 +150,10 @@ public static class Catalog
                     f => FfmpegTo(f, Ext(f), "-af atempo=1.5", "1.5x")));
                 break;
         }
+
+        // Anything can be zipped.
+        if (kind != FileKind.Archive)
+            yield return new WheelItem("ZIP", "compress", JobRunner.AllFiles("Pack as ZIP", items => Archives.PackAsync(items, "zip")));
     }
 
     // ── Actions (Alt) — work for any file, folder or mixed selection ──────
@@ -160,7 +209,7 @@ public static class Catalog
         return output;
     }
 
-    private static string Ext(string path) => Path.GetExtension(path).TrimStart('.').ToLowerInvariant();
+    private static string Ext(string path) => FileKinds.Ext(path);
 
     private static Task MoveOrCopy(IReadOnlyList<string> files, bool move)
     {
@@ -203,6 +252,18 @@ public static class Catalog
     {
         "jpg" => "photo", "png" => "lossless", "webp" => "web", "avif" => "tiny",
         "gif" => "classic", "tiff" => "print", "bmp" => "raw", "ico" => "icon", _ => ""
+    };
+
+    private static string DocHint(string ext) => ext switch
+    {
+        "pdf" => "to share", "docx" => "Word", "doc" => "Word 97", "odt" => "OpenDocument", "rtf" => "rich text",
+        "txt" => "plain text", "html" => "web page", "md" => "Markdown", "epub" => "e-book", _ => ""
+    };
+
+    private static string SheetHint(string ext) => ext switch
+    {
+        "pdf" => "to print", "xlsx" => "Excel", "xls" => "Excel 97", "ods" => "OpenDocument",
+        "csv" => "comma", "tsv" => "tab", "html" => "web table", _ => ""
     };
 
     private static string AudioHint(string ext) => ext switch

@@ -21,7 +21,8 @@ public static class Paths
         var dir = Path.GetDirectoryName(source) ?? Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
         var name = Path.GetFileNameWithoutExtension(source);
         if (!string.IsNullOrEmpty(suffix)) name += $" ({suffix})";
-        if (!newExt.StartsWith('.')) newExt = "." + newExt;
+        // An empty extension means a folder, e.g. "deck (png slides)".
+        if (newExt.Length > 0 && !newExt.StartsWith('.')) newExt = "." + newExt;
         return Unique(Path.Combine(dir, name + newExt));
     }
 
