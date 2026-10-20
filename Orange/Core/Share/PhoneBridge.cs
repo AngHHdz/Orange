@@ -54,8 +54,26 @@ public static class PhoneBridge
             var app = builder.Build();
             app.Use(async (ctx, next) =>
             {
-                if (ctx.Request.Path.StartsWithSegments("/icon.png") || Authorized(ctx)) await next();
-                else ctx.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                bool upload = ctx.Request.Path.StartsWithSegments("/api/upload");
+                if (ctx.Request.Path.StartsWithSegments("/icon.png") || Authorized(ctx))
+                {
+                    try { await next(); }
+                    catch (Exception ex)
+                    {
+                        JobRunner.Log($"FAIL phone request {ctx.Request.Method} {ctx.Request.Path}: {ex.Message}");
+                        if (!ctx.Response.HasStarted) ctx.Response.StatusCode = StatusCodes.Status500InternalServerError;
+                    }
+                }
+                else
+                {
+                    ctx.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                    JobRunner.Log($"FAIL phone request rejected (wrong or missing key) from {ctx.Connection.RemoteIpAddress}: {ctx.Request.Method} {ctx.Request.Path}");
+                }
+
+                // Every upload attempt is logged, so Shortcut problems can be diagnosed from the PC.
+                if (upload)
+                    JobRunner.Log($"     upload from {ctx.Connection.RemoteIpAddress}: {ctx.Request.Method} {ctx.Request.ContentType ?? "(no type)"}, " +
+                                  $"{ctx.Request.ContentLength?.ToString() ?? "?"} bytes, agent \"{ctx.Request.Headers.UserAgent}\" → {ctx.Response.StatusCode}");
             });
 
             app.MapGet("/", ctx =>
