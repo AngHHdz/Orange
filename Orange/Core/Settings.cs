@@ -26,6 +26,9 @@ public sealed class Settings
     public int ImageQuality { get; set; } = 90;
     public bool Notifications { get; set; } = true;
 
+    // Updates
+    public bool AutoCheckUpdates { get; set; } = true;
+
     // Phone sharing ("AirDrop" over Wi-Fi)
     public bool PhoneSharing { get; set; } = true;
     public int PhonePort { get; set; } = 8765;

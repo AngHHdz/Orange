@@ -15,12 +15,13 @@ public static class Tools
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Pandoc"));
     }
 
-    /// <summary>Looks next to Orange.exe first (bundled copy), then in a "tools" folder,
-    /// then in the known install folders, then on PATH.</summary>
+    /// <summary>Looks in Orange's updated-tools folder first (Settings → Update tools), then next to
+    /// Orange.exe and its "tools" folder (bundled copies), then the known install folders, then PATH.</summary>
     public static string? Find(string exe, params string[] knownDirs)
     {
         var baseDir = AppContext.BaseDirectory;
-        foreach (var dir in new[] { baseDir, Path.Combine(baseDir, "tools") }.Concat(knownDirs))
+        var updated = Path.Combine(Paths.AppData, "tools");
+        foreach (var dir in new[] { updated, baseDir, Path.Combine(baseDir, "tools") }.Concat(knownDirs))
         {
             var candidate = Path.Combine(dir, exe);
             if (File.Exists(candidate)) return candidate;

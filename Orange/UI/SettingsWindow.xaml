@@ -149,11 +149,29 @@
             </StackPanel>
         </Border>
 
+        <!-- Updates -->
+        <Border Style="{StaticResource Card}">
+            <StackPanel>
+                <TextBlock x:Name="UpdatesHeader" Style="{StaticResource Header}" Text="Updates" />
+                <TextBlock x:Name="VersionText" Text="Orange 1.0.0" Margin="0,0,0,4" />
+                <CheckBox x:Name="AutoUpdateBox" Content="Check for new versions automatically" />
+                <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                    <Button x:Name="CheckNowButton" Content="Check now" Padding="12,4" />
+                    <TextBlock x:Name="UpdateStatus" VerticalAlignment="Center" Margin="10,0,0,0" Foreground="#6B6B73" TextWrapping="Wrap" MaxWidth="330" />
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
         <!-- Engines -->
         <Border Style="{StaticResource Card}">
             <StackPanel>
                 <TextBlock x:Name="EnginesHeader" Style="{StaticResource Header}" Text="Engines" />
                 <ItemsControl x:Name="EngineList" />
+                <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                    <Button x:Name="ToolsButton" Content="Check for tool updates" Padding="12,4" />
+                    <TextBlock x:Name="ToolsStatus" VerticalAlignment="Center" Margin="10,0,0,0" Foreground="#6B6B73" TextWrapping="Wrap" MaxWidth="300" />
+                </StackPanel>
+                <ProgressBar x:Name="ToolsProgress" Height="4" Margin="0,8,0,0" Maximum="1" Visibility="Collapsed" Foreground="{StaticResource Accent}" />
             </StackPanel>
         </Border>
 

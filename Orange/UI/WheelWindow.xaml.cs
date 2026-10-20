@@ -220,7 +220,8 @@ public partial class WheelWindow : Window
             _slices.Add(slice);
             Ring.Children.Add(slice);
 
-            double mid = i * step, r = (OuterR + InnerR) / 2 + 4;
+            // Crowded wheels: labels sit further out, where the slices are wider.
+            double mid = i * step, r = (OuterR + InnerR) / 2 + (n >= 10 ? 10 : 4);
             AddLabel(_items[i], Cx + r * Math.Sin(mid), Cy - r * Math.Cos(mid), n);
         }
         ShowCenter();
@@ -228,18 +229,27 @@ public partial class WheelWindow : Window
 
     private void AddLabel(WheelItem item, double x, double y, int count)
     {
-        var panel = new StackPanel { IsHitTestVisible = false, Width = 90 };
+        // With 10+ slices neighbours are only ~70 px apart, so labels get narrower, smaller and may wrap
+        // ("Marca de agua…" becomes two lines) instead of overlapping the next slice.
+        bool crowded = count >= 10;
+        double width = crowded ? 74 : 90;
+        var label = Loc.T(item.Label);
+        // A single long word ("Desbloquear…") can't wrap nicely, so it gets a smaller font instead.
+        double labelSize = !crowded ? 15 : !label.Contains(' ') && label.Length > 10 ? 11 : 12.5;
+        var panel = new StackPanel { IsHitTestVisible = false, Width = width };
         panel.Children.Add(new TextBlock
         {
-            Text = Loc.T(item.Label), Foreground = Brushes.White, FontWeight = FontWeights.SemiBold,
-            FontSize = count > 9 ? 13 : 15, HorizontalAlignment = HorizontalAlignment.Center
+            Text = label, Foreground = Brushes.White, FontWeight = FontWeights.SemiBold,
+            FontSize = labelSize, TextAlignment = TextAlignment.Center, TextWrapping = TextWrapping.Wrap,
+            LineHeight = crowded ? 14 : double.NaN,
         });
         panel.Children.Add(new TextBlock
         {
-            Text = Loc.T(item.Hint), Foreground = TabOff, FontSize = 10, HorizontalAlignment = HorizontalAlignment.Center
+            Text = Loc.T(item.Hint), Foreground = TabOff, FontSize = crowded ? 9.5 : 10,
+            TextAlignment = TextAlignment.Center, TextWrapping = TextWrapping.Wrap,
         });
-        panel.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
-        Canvas.SetLeft(panel, x - 45);
+        panel.Measure(new Size(width, double.PositiveInfinity));
+        Canvas.SetLeft(panel, x - width / 2);
         Canvas.SetTop(panel, y - panel.DesiredSize.Height / 2);
         Ring.Children.Add(panel);
     }

@@ -2,6 +2,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using Orange.Core;
+using Orange.Core.Updates;
 
 namespace Orange.UI;
 
@@ -64,6 +65,13 @@ public partial class SettingsWindow : Window
         };
         PairButton.Click += (_, _) => PairWindow.ShowSingle();
 
+        VersionText.Text = $"Orange {AppUpdater.Current}";
+        AutoUpdateBox.IsChecked = s.AutoCheckUpdates;
+        CheckNowButton.Click += CheckNowClick;
+        ToolsButton.Click += ToolsClick;
+        if (AppUpdater.Available is { } pending)
+            UpdateStatus.Text = Loc.F("Orange {0} is available", pending.Version);
+
         SaveButton.Click += (_, _) => Save();
         ApplyTexts();
         ShowEngines();
@@ -96,25 +104,42 @@ public partial class SettingsWindow : Window
         InboxBrowse.Content = T("Browse…");
         PairButton.Content = T("Connect phone…");
         EnginesHeader.Text = T("Engines");
+        UpdatesHeader.Text = T("Updates");
+        AutoUpdateBox.Content = T("Check for new versions automatically");
+        if (CheckNowButton.IsEnabled && AppUpdater.Available == null) CheckNowButton.Content = T("Check now");
+        if (_toolUpdates.Count == 0) ToolsButton.Content = T("Check for tool updates");
         SaveButton.Content = T("Save");
         CancelButton.Content = T("Cancel");
         ShowEngines();
     }
 
-    private void ShowEngines()
+    // Versions are read by running the tools, so they are cached for the life of the window.
+    private readonly Dictionary<ToolUpdater.Tool, string?> _toolVersions = [];
+    private List<(ToolUpdater.Tool Tool, string Latest)> _toolUpdates = [];
+
+    private async void ShowEngines()
     {
         string T(string s) => Loc.In(Lang, s);
-        var engines = new (string Name, bool Ok, string Detail)[]
+        foreach (var tool in ToolUpdater.All.Where(t => !_toolVersions.ContainsKey(t)))
+            _toolVersions[tool] = await Task.Run(() => ToolUpdater.InstalledVersion(tool));
+
+        string ToolDetail(ToolUpdater.Tool tool, string? path) =>
+            path == null ? "" : $"{_toolVersions.GetValueOrDefault(tool) ?? "?"} · " +
+                (path.StartsWith(ToolUpdater.Folder, StringComparison.OrdinalIgnoreCase) ? T("updated")
+                 : path.StartsWith(AppContext.BaseDirectory, StringComparison.OrdinalIgnoreCase) ? T("included")
+                 : T("installed on this PC")); // the full path is in the tooltip
+
+        var engines = new (string Name, bool Ok, string Detail, string? Path)[]
         {
-            ("ffmpeg", Tools.Ffmpeg != null, Tools.Ffmpeg ?? "winget install Gyan.FFmpeg"),
-            ("Pandoc", Tools.Pandoc != null, Tools.Pandoc ?? "winget install JohnMacFarlane.Pandoc"),
-            ("Microsoft Word", Office.HasWord, ""),
-            ("Microsoft Excel", Office.HasExcel, ""),
-            ("Microsoft PowerPoint", Office.HasPowerPoint, ""),
+            ("ffmpeg", Tools.Ffmpeg != null, Tools.Ffmpeg != null ? ToolDetail(ToolUpdater.Ffmpeg, Tools.Ffmpeg) : "", Tools.Ffmpeg),
+            ("Pandoc", Tools.Pandoc != null, Tools.Pandoc != null ? ToolDetail(ToolUpdater.Pandoc, Tools.Pandoc) : "", Tools.Pandoc),
+            ("Microsoft Word", Office.HasWord, "", null),
+            ("Microsoft Excel", Office.HasExcel, "", null),
+            ("Microsoft PowerPoint", Office.HasPowerPoint, "", null),
         };
 
         EngineList.Items.Clear();
-        foreach (var (name, ok, detail) in engines)
+        foreach (var (name, ok, detail, path) in engines)
         {
             var row = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 2, 0, 2) };
             row.Children.Add(new TextBlock
@@ -125,11 +150,99 @@ public partial class SettingsWindow : Window
             row.Children.Add(new TextBlock { Text = name, Width = 160 });
             row.Children.Add(new TextBlock
             {
-                Text = ok ? T("found") : $"{T("not found")} — {detail}",
-                Foreground = Brushes.Gray, TextTrimming = TextTrimming.CharacterEllipsis, MaxWidth = 290,
-                ToolTip = detail.Length > 0 ? detail : null,
+                Text = !ok ? T("not found") : detail.Length > 0 ? detail : T("found"),
+                Foreground = Brushes.Gray, TextTrimming = TextTrimming.CharacterEllipsis, MaxWidth = 290, ToolTip = path,
             });
             EngineList.Items.Add(row);
+        }
+    }
+
+    // ── Updates ───────────────────────────────────────────────────────────
+
+    private async Task CheckAppAsync()
+    {
+        string T(string s) => Loc.In(Lang, s);
+        CheckNowButton.IsEnabled = false;
+        UpdateStatus.Text = T("Checking…");
+        try
+        {
+            var release = await AppUpdater.CheckAsync();
+            if (release == null)
+            {
+                UpdateStatus.Text = string.Format(T("You have the latest version ({0})."), AppUpdater.Current);
+            }
+            else
+            {
+                UpdateStatus.Text = string.Format(T("Orange {0} is available"), release.Version);
+                CheckNowButton.Content = T("Update now");
+                CheckNowButton.Click -= CheckNowClick;
+                CheckNowButton.Click += (_, _) =>
+                {
+                    CheckNowButton.IsEnabled = false;
+                    UpdateStatus.Text = string.Format(T("Updating to Orange {0}…"), release.Version);
+                    _ = App.Instance.InstallUpdateAsync();
+                };
+            }
+        }
+        catch (Exception ex)
+        {
+            JobRunner.Log($"Update check failed: {ex.Message}");
+            UpdateStatus.Text = T("Could not check for updates. Are you online?");
+        }
+        finally
+        {
+            CheckNowButton.IsEnabled = true;
+        }
+    }
+
+    private async void CheckNowClick(object sender, RoutedEventArgs e) => await CheckAppAsync();
+
+    private async void ToolsClick(object sender, RoutedEventArgs e)
+    {
+        string T(string s) => Loc.In(Lang, s);
+        ToolsButton.IsEnabled = false;
+        try
+        {
+            if (_toolUpdates.Count == 0)
+            {
+                // Step 1: compare what we have with what's published.
+                ToolsStatus.Text = T("Checking…");
+                var found = new List<(ToolUpdater.Tool, string)>();
+                foreach (var tool in ToolUpdater.All)
+                {
+                    var latest = await tool.LatestAsync();
+                    if (ToolUpdater.IsNewer(latest, _toolVersions.GetValueOrDefault(tool))) found.Add((tool, latest));
+                }
+                _toolUpdates = found;
+                ToolsStatus.Text = found.Count == 0 ? T("All tools are up to date.")
+                    : string.Join(", ", found.Select(f => $"{f.Item1.Name} {f.Item2}"));
+                ToolsButton.Content = found.Count == 0 ? T("Check for tool updates") : T("Update tools");
+                return;
+            }
+
+            // Step 2: download and install them, one after another.
+            ToolsProgress.Visibility = Visibility.Visible;
+            foreach (var (tool, latest) in _toolUpdates)
+            {
+                ToolsStatus.Text = string.Format(T("Downloading {0} {1}…"), tool.Name, latest);
+                ToolsProgress.Value = 0;
+                await tool.UpdateAsync(new Progress<double>(p => ToolsProgress.Value = p));
+                _toolVersions.Remove(tool);
+            }
+            _toolUpdates = [];
+            ToolsStatus.Text = T("Tools updated ✓");
+            ToolsButton.Content = T("Check for tool updates");
+            ShowEngines();
+        }
+        catch (Exception ex)
+        {
+            JobRunner.Log($"FAIL tool update: {ex}");
+            ToolsStatus.Text = T("Update failed") + ": " + ex.Message;
+        }
+        finally
+        {
+            ToolsButton.IsEnabled = true;
+            ToolsProgress.Visibility = Visibility.Collapsed;
         }
     }
 
@@ -171,6 +284,7 @@ public partial class SettingsWindow : Window
         s.Output = ToFolder.IsChecked == true ? OutputMode.Folder : OutputMode.NextToOriginal;
         s.OutputFolder = FolderBox.Text;
         s.ImageQuality = (int)QualitySlider.Value;
+        s.AutoCheckUpdates = AutoUpdateBox.IsChecked == true;
         s.PhoneSharing = PhoneBox.IsChecked == true;
         s.PhoneInbox = InboxBox.Text;
         bool phoneChanged = s.PhoneSharing != Settings.Current.PhoneSharing;
