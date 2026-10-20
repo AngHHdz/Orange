@@ -17,7 +17,7 @@ public static class Archives
     /// <summary>Extracts into a new folder next to the archive, named after it.</summary>
     public static Task<string> ExtractAsync(string archive) => Task.Run(() =>
     {
-        var dest = Paths.Unique(Path.Combine(Path.GetDirectoryName(archive)!, BaseName(archive)));
+        var dest = Paths.Unique(Path.Combine(Paths.OutputDir(archive), BaseName(archive)));
         Directory.CreateDirectory(dest);
         ExtractTo(archive, dest);
         return dest;
@@ -45,7 +45,7 @@ public static class Archives
     /// <summary>Packs files and folders into one archive next to the first item.</summary>
     public static Task<string> PackAsync(IReadOnlyList<string> items, string format) => Task.Run(() =>
     {
-        var dir = Path.GetDirectoryName(items[0].TrimEnd('\\'))!;
+        var dir = Paths.OutputDir(items[0]);
         var name = items.Count == 1 ? Path.GetFileNameWithoutExtension(items[0].TrimEnd('\\')) : "Archive";
         if (items.Count == 1 && Directory.Exists(items[0])) name = Path.GetFileName(items[0].TrimEnd('\\'));
         var output = Paths.Unique(Path.Combine(dir, $"{name}.{format}"));
@@ -61,7 +61,7 @@ public static class Archives
         try
         {
             ExtractTo(archive, temp);
-            var output = Paths.Unique(Path.Combine(Path.GetDirectoryName(archive)!, $"{BaseName(archive)}.{format}"));
+            var output = Paths.Unique(Path.Combine(Paths.OutputDir(archive), $"{BaseName(archive)}.{format}"));
             Pack(Directory.GetFileSystemEntries(temp), output, format);
             return output;
         }

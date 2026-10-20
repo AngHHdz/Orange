@@ -12,13 +12,21 @@ public static class Paths
         }
     }
 
+    /// <summary>Where new files go: next to the source, or the folder chosen in Settings.</summary>
+    public static string OutputDir(string source)
+    {
+        var s = Settings.Current;
+        if (s.Output == OutputMode.Folder && Directory.Exists(s.OutputFolder)) return s.OutputFolder;
+        return Path.GetDirectoryName(source.TrimEnd('\\')) ?? Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+    }
+
     /// <summary>
-    /// Output path next to the source: "photo.heic" + ".png" → "photo.png",
+    /// Output path for a source file: "photo.heic" + ".png" → "photo.png",
     /// or "photo (1).png" if that name is taken. A suffix gives "clip (compressed).mp4".
     /// </summary>
     public static string Output(string source, string newExt, string? suffix = null)
     {
-        var dir = Path.GetDirectoryName(source) ?? Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+        var dir = OutputDir(source);
         var name = Path.GetFileNameWithoutExtension(source);
         if (!string.IsNullOrEmpty(suffix)) name += $" ({suffix})";
         // An empty extension means a folder, e.g. "deck (png slides)".

@@ -162,7 +162,7 @@ public static class Pdf
         if (after >= before)
         {
             File.Delete(output);
-            throw new InvalidOperationException("This PDF is already as small as Orange can make it.");
+            throw new InvalidOperationException(Loc.T("This PDF is already as small as Orange can make it."));
         }
         JobRunner.Log($"     compressed {before / 1024} KB → {after / 1024} KB ({100 - after * 100 / before}% smaller)");
         return output;
@@ -340,7 +340,7 @@ public static class Pdf
         }
 
         var text = sb.ToString().Trim();
-        if (text.Length == 0) throw new InvalidOperationException("No text was found.");
+        if (text.Length == 0) throw new InvalidOperationException(Loc.T("No text was found."));
         var output = Paths.Output(input, "txt", "ocr");
         await File.WriteAllTextAsync(output, text, new UTF8Encoding(false));
         return output;
@@ -414,10 +414,10 @@ public static class PageRanges
                 from = parts[0].Length == 0 ? 1 : int.TryParse(parts[0], out var f) ? f : -1;
                 to = parts[1].Length == 0 ? pageCount : int.TryParse(parts[1], out var t) ? t : -1;
             }
-            else throw new FormatException($"I don't understand \"{raw}\". Use something like 1-3, 5, 8-");
+            else throw new FormatException(Loc.F("I don't understand \"{0}\". Use something like 1-3, 5, 8-", raw));
 
             if (from < 1 || to < from || to > pageCount)
-                throw new FormatException($"\"{raw}\" is outside this PDF (it has {pageCount} pages).");
+                throw new FormatException(Loc.F("\"{0}\" is outside this PDF (it has {1} pages).", raw, pageCount));
 
             result.Add((from == to ? $"p{from}" : $"p{from}-{to}", Enumerable.Range(from - 1, to - from + 1).ToList()));
         }

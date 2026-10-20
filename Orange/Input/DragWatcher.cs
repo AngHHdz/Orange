@@ -132,19 +132,24 @@ public sealed class DragWatcher : IDisposable
         return Math.Abs(p.X - _downPt.X) > cx || Math.Abs(p.Y - _downPt.Y) > cy;
     }
 
-    private static WheelMode? ModeFor(int vk) => vk switch
+    // Which key opens which mode comes from Settings (default Shift / Ctrl / Alt).
+    private static WheelMode? ModeFor(int vk)
     {
-        Native.VK_SHIFT or Native.VK_LSHIFT or Native.VK_RSHIFT => WheelMode.Convert,
-        Native.VK_CONTROL or Native.VK_LCONTROL or Native.VK_RCONTROL => WheelMode.Tools,
-        Native.VK_MENU or Native.VK_LMENU or Native.VK_RMENU => WheelMode.Actions,
-        _ => null
-    };
+        ModKey? key = vk switch
+        {
+            Native.VK_SHIFT or Native.VK_LSHIFT or Native.VK_RSHIFT => ModKey.Shift,
+            Native.VK_CONTROL or Native.VK_LCONTROL or Native.VK_RCONTROL => ModKey.Ctrl,
+            Native.VK_MENU or Native.VK_LMENU or Native.VK_RMENU => ModKey.Alt,
+            _ => null
+        };
+        return key is { } k ? Settings.Current.ModeFor(k) : null;
+    }
 
     private static WheelMode? HeldMode()
     {
-        if (Native.IsDown(Native.VK_SHIFT)) return WheelMode.Convert;
-        if (Native.IsDown(Native.VK_CONTROL)) return WheelMode.Tools;
-        if (Native.IsDown(Native.VK_MENU)) return WheelMode.Actions;
+        if (Native.IsDown(Native.VK_SHIFT)) return Settings.Current.ModeFor(ModKey.Shift);
+        if (Native.IsDown(Native.VK_CONTROL)) return Settings.Current.ModeFor(ModKey.Ctrl);
+        if (Native.IsDown(Native.VK_MENU)) return Settings.Current.ModeFor(ModKey.Alt);
         return null;
     }
 

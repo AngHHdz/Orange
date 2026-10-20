@@ -1,4 +1,4 @@
-﻿using ImageMagick;
+using ImageMagick;
 
 namespace Orange.Core;
 
@@ -34,7 +34,7 @@ public static class Images
         if (ext == "ico")
             img.Resize(new MagickGeometry("256x256>"));
         if (ext is "jpg" or "webp" or "avif")
-            img.Quality = 90;
+            img.Quality = (uint)Settings.Current.ImageQuality;
 
         img.Write(output, Formats[ext]);
         return output;

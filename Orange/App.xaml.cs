@@ -48,37 +48,44 @@ public partial class App : Application
         _watcher.Start();
 
         CreateTray();
+        Settings.Changed += BuildTrayMenu; // new language → new menu texts
 
-        Notify("Orange is running",
-            "Drag a file and press Shift (convert), Ctrl (tools) or Alt (actions).");
+        var s = Settings.Current;
+        Notify(Loc.T("Orange is running"), Loc.F("Drag a file and press {0} (convert), {1} (tools) or {2} (actions).",
+            Settings.KeyName(s.ConvertKey), Settings.KeyName(s.ToolsKey), Settings.KeyName(s.ActionsKey)), force: true);
     }
 
     private void CreateTray()
     {
-        var menu = new Forms.ContextMenuStrip();
-        menu.Items.Add("Convert files…", null, (_, _) => PickAndShowMenu());
-        menu.Items.Add("Open output log", null, (_, _) => JobRunner.OpenLog());
-        var autostart = new Forms.ToolStripMenuItem("Start with Windows") { Checked = Autostart.IsEnabled, CheckOnClick = true };
-        autostart.CheckedChanged += (_, _) => Autostart.Set(autostart.Checked);
-        menu.Items.Add(autostart);
-        menu.Items.Add(new Forms.ToolStripSeparator());
-        menu.Items.Add("Quit Orange", null, (_, _) => Shutdown());
-
         _tray = new Forms.NotifyIcon
         {
             Icon = IconFactory.CreateTrayIcon(),
-            Text = "Orange — file converter",
             Visible = true,
-            ContextMenuStrip = menu
         };
         _tray.DoubleClick += (_, _) => PickAndShowMenu();
         _tray.BalloonTipClicked += (_, _) => JobRunner.RevealLastOutput();
+        BuildTrayMenu();
+    }
+
+    private void BuildTrayMenu()
+    {
+        var menu = new Forms.ContextMenuStrip();
+        menu.Items.Add(Loc.T("Convert files…"), null, (_, _) => PickAndShowMenu());
+        menu.Items.Add(Loc.T("Settings…"), null, (_, _) => SettingsWindow.ShowSingle());
+        menu.Items.Add(Loc.T("Open output log"), null, (_, _) => JobRunner.OpenLog());
+        menu.Items.Add(new Forms.ToolStripSeparator());
+        menu.Items.Add(Loc.T("Quit Orange"), null, (_, _) => Shutdown());
+
+        var old = _tray!.ContextMenuStrip;
+        _tray.ContextMenuStrip = menu;
+        _tray.Text = Loc.T("Orange — file converter");
+        old?.Dispose();
     }
 
     // Fallback flow without dragging: pick files, then open the wheel in the middle of the screen.
     private void PickAndShowMenu()
     {
-        var dlg = new Microsoft.Win32.OpenFileDialog { Multiselect = true, Title = "Choose files for Orange" };
+        var dlg = new Microsoft.Win32.OpenFileDialog { Multiselect = true, Title = Loc.T("Choose files for Orange") };
         if (dlg.ShowDialog() != true) return;
         var pos = Forms.Cursor.Position;
         _wheel!.ShowForFiles(dlg.FileNames, WheelMode.Convert, pos.X, pos.Y);
@@ -90,8 +97,10 @@ public partial class App : Application
         return new System.Security.Principal.WindowsPrincipal(id).IsInRole(System.Security.Principal.WindowsBuiltInRole.Administrator);
     }
 
-    public void Notify(string title, string text, bool error = false)
+    /// <summary>Tray notification. Errors always show; other messages respect the Notifications setting.</summary>
+    public void Notify(string title, string text, bool error = false, bool force = false)
     {
+        if (!error && !force && !Settings.Current.Notifications) return;
         _tray?.ShowBalloonTip(3000, title, text, error ? Forms.ToolTipIcon.Error : Forms.ToolTipIcon.Info);
     }
 

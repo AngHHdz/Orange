@@ -20,8 +20,8 @@ public partial class WheelWindow : Window
 {
     private const double Cx = 200, Cy = 200, OuterR = 190, InnerR = 64;
 
-    /// <summary>Visual size of the wheel (1 = 400 px). Hit-testing works in unscaled coordinates, so only this changes.</summary>
-    private const double WheelScale = 0.8;
+    /// <summary>Visual size of the wheel (1 = 400 px), from Settings. Hit-testing works in unscaled coordinates, so only this changes.</summary>
+    private static double WheelScale => Settings.Current.WheelScale;
 
     private static readonly Brush SliceBrush = Freeze(new SolidColorBrush(Color.FromArgb(0xEB, 0x22, 0x22, 0x26)));
     private static readonly Brush SliceHotBrush = Freeze(new SolidColorBrush(Color.FromRgb(0xFF, 0x8A, 0x1F)));
@@ -114,6 +114,10 @@ public partial class WheelWindow : Window
     public void SetMode(WheelMode mode)
     {
         _mode = mode;
+        var s = Settings.Current;
+        TabConvert.Text = $"{Settings.KeyName(s.ConvertKey)} · {Loc.T("Convert")}";
+        TabTools.Text = $"{Settings.KeyName(s.ToolsKey)} · {Loc.T("Tools")}";
+        TabActions.Text = $"{Settings.KeyName(s.ActionsKey)} · {Loc.T("Actions")}";
         TabConvert.Foreground = mode == WheelMode.Convert ? TabOn : TabOff;
         TabTools.Foreground = mode == WheelMode.Tools ? TabOn : TabOff;
         TabActions.Foreground = mode == WheelMode.Actions ? TabOn : TabOff;
@@ -127,8 +131,8 @@ public partial class WheelWindow : Window
         if (e.Data.GetData(DataFormats.FileDrop) is not string[] files || files.Length == 0)
         {
             e.Effects = DragDropEffects.None;
-            CenterTitle.Text = "Files only";
-            CenterSub.Text = "drag files or folders";
+            CenterTitle.Text = Loc.T("Files only");
+            CenterSub.Text = Loc.T("drag files or folders");
             e.Handled = true;
             return;
         }
@@ -227,12 +231,12 @@ public partial class WheelWindow : Window
         var panel = new StackPanel { IsHitTestVisible = false, Width = 90 };
         panel.Children.Add(new TextBlock
         {
-            Text = item.Label, Foreground = Brushes.White, FontWeight = FontWeights.SemiBold,
+            Text = Loc.T(item.Label), Foreground = Brushes.White, FontWeight = FontWeights.SemiBold,
             FontSize = count > 9 ? 13 : 15, HorizontalAlignment = HorizontalAlignment.Center
         });
         panel.Children.Add(new TextBlock
         {
-            Text = item.Hint, Foreground = TabOff, FontSize = 10, HorizontalAlignment = HorizontalAlignment.Center
+            Text = Loc.T(item.Hint), Foreground = TabOff, FontSize = 10, HorizontalAlignment = HorizontalAlignment.Center
         });
         panel.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
         Canvas.SetLeft(panel, x - 45);
@@ -253,23 +257,23 @@ public partial class WheelWindow : Window
     {
         if (_files.Count == 0 && !_clickMode)
         {
-            CenterTitle.Text = _mode.ToString();
-            CenterSub.Text = "move over the wheel";
+            CenterTitle.Text = Loc.T(_mode.ToString());
+            CenterSub.Text = Loc.T("move over the wheel");
         }
         else if (_items.Count == 0)
         {
-            CenterTitle.Text = _mode.ToString();
-            CenterSub.Text = "nothing for this file yet";
+            CenterTitle.Text = Loc.T(_mode.ToString());
+            CenterSub.Text = Loc.T("nothing for this file yet");
         }
         else if (_hot >= 0)
         {
-            CenterTitle.Text = _items[_hot].Label;
-            CenterSub.Text = _files.Count == 1 ? System.IO.Path.GetFileName(_files[0]) : $"{_files.Count} files";
+            CenterTitle.Text = Loc.T(_items[_hot].Label);
+            CenterSub.Text = _files.Count == 1 ? System.IO.Path.GetFileName(_files[0]) : Loc.F("{0} files", _files.Count);
         }
         else
         {
-            CenterTitle.Text = "Cancel";
-            CenterSub.Text = _files.Count == 1 ? System.IO.Path.GetFileName(_files[0]) : $"{_files.Count} files";
+            CenterTitle.Text = Loc.T("Cancel");
+            CenterSub.Text = _files.Count == 1 ? System.IO.Path.GetFileName(_files[0]) : Loc.F("{0} files", _files.Count);
         }
     }
 

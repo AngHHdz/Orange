@@ -40,7 +40,7 @@ public static class Catalog
             case FileKind.Image:
                 foreach (var ext in new[] { "jpg", "png", "webp", "avif", "gif", "tiff", "bmp", "ico" }.Where(e => !Same(e)))
                     yield return new WheelItem(ext.ToUpperInvariant(), ImageHint(ext),
-                        JobRunner.PerFile($"Convert to {ext.ToUpperInvariant()}", f => Images.ConvertAsync(f, ext)));
+                        JobRunner.PerFile(Loc.F("Convert to {0}", ext.ToUpperInvariant()), f => Images.ConvertAsync(f, ext)));
                 yield return paths.Count > 1
                     ? new WheelItem("PDF", "one file", JobRunner.AllFiles("Images → PDF", Images.ToPdfAsync))
                     : new WheelItem("PDF", "document", JobRunner.PerFile("Convert to PDF", f => Images.ConvertAsync(f, "pdf")));
@@ -49,16 +49,16 @@ public static class Catalog
             case FileKind.Video:
                 foreach (var ext in new[] { "mp4", "mov", "mkv", "webm", "avi", "gif" }.Where(e => !Same(e)))
                     yield return new WheelItem(ext.ToUpperInvariant(), ext == "gif" ? "animated" : "video",
-                        JobRunner.PerFile($"Convert to {ext.ToUpperInvariant()}", f => FfmpegTo(f, ext, Ffmpeg.VideoArgs(ext))));
+                        JobRunner.PerFile(Loc.F("Convert to {0}", ext.ToUpperInvariant()), f => FfmpegTo(f, ext, Ffmpeg.VideoArgs(ext))));
                 foreach (var ext in new[] { "mp3", "m4a", "wav" })
                     yield return new WheelItem(ext.ToUpperInvariant(), "audio only",
-                        JobRunner.PerFile($"Extract {ext.ToUpperInvariant()}", f => FfmpegTo(f, ext, Ffmpeg.AudioArgs(ext))));
+                        JobRunner.PerFile(Loc.F("Extract {0}", ext.ToUpperInvariant()), f => FfmpegTo(f, ext, Ffmpeg.AudioArgs(ext))));
                 break;
 
             case FileKind.Audio:
                 foreach (var ext in new[] { "mp3", "m4a", "wav", "flac", "ogg", "opus", "aiff", "wma" }.Where(e => !Same(e)))
                     yield return new WheelItem(ext.ToUpperInvariant(), AudioHint(ext),
-                        JobRunner.PerFile($"Convert to {ext.ToUpperInvariant()}", f => FfmpegTo(f, ext, Ffmpeg.AudioArgs(ext))));
+                        JobRunner.PerFile(Loc.F("Convert to {0}", ext.ToUpperInvariant()), f => FfmpegTo(f, ext, Ffmpeg.AudioArgs(ext))));
                 break;
 
             case FileKind.Pdf:
@@ -70,43 +70,43 @@ public static class Catalog
                 yield return new WheelItem("PPTX", "slides", JobRunner.PerFile("PDF → PowerPoint", Pdf.ToPptxAsync));
                 foreach (var ext in new[] { "md", "epub", "html", "rtf", "odt" })
                     yield return new WheelItem(ext.ToUpperInvariant(), DocHint(ext),
-                        JobRunner.PerFile($"PDF → {ext.ToUpperInvariant()}", f => Pdf.ToDocumentAsync(f, ext)));
+                        JobRunner.PerFile(Loc.F("PDF → {0}", ext.ToUpperInvariant()), f => Pdf.ToDocumentAsync(f, ext)));
                 break;
 
             case FileKind.Document:
             case FileKind.Ebook:
                 foreach (var ext in Docs.TargetsFor(paths[0]).Where(e => !Same(e)))
                     yield return new WheelItem(ext.ToUpperInvariant(), DocHint(ext),
-                        JobRunner.PerFile($"Convert to {ext.ToUpperInvariant()}", f => Docs.ConvertAsync(f, ext)));
+                        JobRunner.PerFile(Loc.F("Convert to {0}", ext.ToUpperInvariant()), f => Docs.ConvertAsync(f, ext)));
                 break;
 
             case FileKind.Spreadsheet:
                 foreach (var ext in Office.ExcelTargets.Where(e => !Same(e)))
                     yield return new WheelItem(ext.ToUpperInvariant(), SheetHint(ext),
-                        JobRunner.PerFile($"Convert to {ext.ToUpperInvariant()}", f => Office.ExcelConvertAsync(f, ext)));
+                        JobRunner.PerFile(Loc.F("Convert to {0}", ext.ToUpperInvariant()), f => Office.ExcelConvertAsync(f, ext)));
                 break;
 
             case FileKind.Presentation:
                 foreach (var ext in Office.PowerPointTargets.Where(e => !Same(e)))
                     yield return new WheelItem(ext.ToUpperInvariant(), ext == "pdf" ? "handout" : "slides",
-                        JobRunner.PerFile($"Convert to {ext.ToUpperInvariant()}", f => Office.PowerPointConvertAsync(f, ext)));
+                        JobRunner.PerFile(Loc.F("Convert to {0}", ext.ToUpperInvariant()), f => Office.PowerPointConvertAsync(f, ext)));
                 yield return new WheelItem("PNG", "image per slide",
-                    JobRunner.PerFile("Slides → PNG", f => Office.PowerPointConvertAsync(f, "png")));
+                    JobRunner.PerFile(Loc.F("Slides → {0}", "PNG"), f => Office.PowerPointConvertAsync(f, "png")));
                 yield return new WheelItem("JPG", "image per slide",
-                    JobRunner.PerFile("Slides → JPG", f => Office.PowerPointConvertAsync(f, "jpg")));
+                    JobRunner.PerFile(Loc.F("Slides → {0}", "JPG"), f => Office.PowerPointConvertAsync(f, "jpg")));
                 break;
 
             case FileKind.Archive:
                 yield return new WheelItem("Extract", "to folder", JobRunner.PerFile("Extract", Archives.ExtractAsync));
                 foreach (var fmt in Archives.PackFormats.Where(e => !Same(e)))
                     yield return new WheelItem(fmt.ToUpperInvariant(), "repack",
-                        JobRunner.PerFile($"Repack as {fmt.ToUpperInvariant()}", f => Archives.RepackAsync(f, fmt)));
+                        JobRunner.PerFile(Loc.F("Repack as {0}", fmt.ToUpperInvariant()), f => Archives.RepackAsync(f, fmt)));
                 break;
 
             case FileKind.Subtitle:
                 foreach (var ext in new[] { "srt", "vtt", "txt" }.Where(e => !Same(e)))
                     yield return new WheelItem(ext.ToUpperInvariant(), ext == "txt" ? "text only" : "subtitles",
-                        JobRunner.PerFile($"Convert to {ext.ToUpperInvariant()}", f => Subtitles.ConvertAsync(f, ext)));
+                        JobRunner.PerFile(Loc.F("Convert to {0}", ext.ToUpperInvariant()), f => Subtitles.ConvertAsync(f, ext)));
                 break;
 
             // Folders and mixed selections can always be packed.
@@ -121,7 +121,7 @@ public static class Catalog
         new("Merge", "into one PDF", JobRunner.AllFiles("Merge PDF", Pdf.MergeAsync));
 
     private static IEnumerable<WheelItem> PackItems() => Archives.PackFormats.Select(fmt =>
-        new WheelItem(fmt.ToUpperInvariant(), "compress", JobRunner.AllFiles($"Pack as {fmt.ToUpperInvariant()}", items => Archives.PackAsync(items, fmt))));
+        new WheelItem(fmt.ToUpperInvariant(), "compress", JobRunner.AllFiles(Loc.F("Pack as {0}", fmt.ToUpperInvariant()), items => Archives.PackAsync(items, fmt))));
 
     // ── Tools (Ctrl) ──────────────────────────────────────────────────────
 
@@ -222,14 +222,14 @@ public static class Catalog
             var list = new System.Collections.Specialized.StringCollection();
             list.AddRange(files.ToArray());
             Clipboard.SetFileDropList(list);
-            App.Instance.Notify("Copied", $"{files.Count} item(s) — paste anywhere with Ctrl+V");
+            App.Instance.Notify(Loc.T("Copied"), Loc.F("{0} item(s) — paste anywhere with Ctrl+V", files.Count));
             return Task.CompletedTask;
         }, OnUiThread: true);
 
         yield return new WheelItem("Path", "copy path", files =>
         {
             Clipboard.SetText(string.Join(Environment.NewLine, files));
-            App.Instance.Notify("Path copied", files.Count == 1 ? files[0] : $"{files.Count} paths");
+            App.Instance.Notify(Loc.T("Path copied"), files.Count == 1 ? files[0] : Loc.F("{0} paths", files.Count));
             return Task.CompletedTask;
         }, OnUiThread: true);
 
@@ -270,7 +270,7 @@ public static class Catalog
 
     private static Task MoveOrCopy(IReadOnlyList<string> files, bool move)
     {
-        var dlg = new Microsoft.Win32.OpenFolderDialog { Title = move ? "Move to…" : "Copy to…" };
+        var dlg = new Microsoft.Win32.OpenFolderDialog { Title = Loc.T(move ? "Move to…" : "Copy to…") };
         if (dlg.ShowDialog() != true) return Task.CompletedTask;
         var target = dlg.FolderName;
 

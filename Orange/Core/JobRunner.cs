@@ -53,10 +53,11 @@ public static class JobRunner
     {
         App.Instance.Dispatcher.BeginInvoke(() =>
         {
+            var title = Loc.T(verb);
             if (errors.Count == 0)
-                App.Instance.Notify($"{verb} ✓", ok == 1 ? Path.GetFileName(LastOutput) ?? "Done" : $"{ok} files done");
+                App.Instance.Notify($"{title} ✓", ok == 1 ? Path.GetFileName(LastOutput) ?? Loc.T("Done") : Loc.F("{0} files done", ok));
             else
-                App.Instance.Notify($"{verb}: {errors.Count} failed", string.Join("\n", errors.Take(3)), error: true);
+                App.Instance.Notify(Loc.F("{0}: {1} failed", title, errors.Count), string.Join("\n", errors.Take(3)), error: true);
         });
     }
 

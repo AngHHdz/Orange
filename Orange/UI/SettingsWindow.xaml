@@ -1,0 +1,149 @@
+<Window x:Class="Orange.UI.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Orange Settings" Width="540" SizeToContent="Height"
+        ResizeMode="NoResize" WindowStartupLocation="CenterScreen"
+        Background="#F7F7F8" FontFamily="Segoe UI" FontSize="13">
+    <Window.Resources>
+        <SolidColorBrush x:Key="Accent" Color="#FF8A1F" />
+        <Style x:Key="Card" TargetType="Border">
+            <Setter Property="Background" Value="White" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="BorderBrush" Value="#E4E4E7" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="16,12" />
+            <Setter Property="Margin" Value="0,0,0,12" />
+        </Style>
+        <Style x:Key="Header" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Margin" Value="0,0,0,8" />
+        </Style>
+        <Style x:Key="Row" TargetType="Grid">
+            <Setter Property="Margin" Value="0,4" />
+        </Style>
+        <Style TargetType="ComboBox">
+            <Setter Property="MinWidth" Value="150" />
+            <Setter Property="Padding" Value="6,3" />
+        </Style>
+        <Style TargetType="CheckBox">
+            <Setter Property="Margin" Value="0,4" />
+        </Style>
+        <Style TargetType="RadioButton">
+            <Setter Property="Margin" Value="0,4" />
+        </Style>
+        <Style TargetType="Slider">
+            <Setter Property="Foreground" Value="{StaticResource Accent}" />
+        </Style>
+    </Window.Resources>
+
+    <StackPanel Margin="18">
+        <!-- Title -->
+        <StackPanel Orientation="Horizontal" Margin="2,0,0,14">
+            <Ellipse Width="26" Height="26" Margin="0,0,10,0">
+                <Ellipse.Fill>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Color="#FFB040" Offset="0" />
+                        <GradientStop Color="#F06E0A" Offset="1" />
+                    </LinearGradientBrush>
+                </Ellipse.Fill>
+            </Ellipse>
+            <TextBlock x:Name="TitleText" Text="Orange Settings" FontSize="20" FontWeight="SemiBold" VerticalAlignment="Center" />
+        </StackPanel>
+
+        <!-- General -->
+        <Border Style="{StaticResource Card}">
+            <StackPanel>
+                <TextBlock x:Name="GeneralHeader" Style="{StaticResource Header}" Text="General" />
+                <Grid Style="{StaticResource Row}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition /><ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock x:Name="LanguageLabel" Text="Language" VerticalAlignment="Center" />
+                    <ComboBox x:Name="LanguageBox" Grid.Column="1" DisplayMemberPath="Value" SelectedValuePath="Key" />
+                </Grid>
+                <CheckBox x:Name="AutostartBox" Content="Start with Windows" />
+                <CheckBox x:Name="NotifyBox" Content="Show notifications when a job finishes" />
+            </StackPanel>
+        </Border>
+
+        <!-- Wheel -->
+        <Border Style="{StaticResource Card}">
+            <StackPanel>
+                <TextBlock x:Name="WheelHeader" Style="{StaticResource Header}" Text="Wheel" />
+                <Grid Style="{StaticResource Row}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="150" /><ColumnDefinition /><ColumnDefinition Width="50" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock x:Name="SizeLabel" Text="Size" VerticalAlignment="Center" />
+                    <Slider x:Name="SizeSlider" Grid.Column="1" Minimum="60" Maximum="100" TickFrequency="5"
+                            IsSnapToTickEnabled="True" VerticalAlignment="Center" />
+                    <TextBlock x:Name="SizeValue" Grid.Column="2" Text="80 %" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                </Grid>
+                <Grid Style="{StaticResource Row}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition /><ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock x:Name="ConvertKeyLabel" Text="Key for Convert" VerticalAlignment="Center" />
+                    <ComboBox x:Name="ConvertKeyBox" Grid.Column="1" />
+                </Grid>
+                <Grid Style="{StaticResource Row}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition /><ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock x:Name="ToolsKeyLabel" Text="Key for Tools" VerticalAlignment="Center" />
+                    <ComboBox x:Name="ToolsKeyBox" Grid.Column="1" />
+                </Grid>
+                <Grid Style="{StaticResource Row}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition /><ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock x:Name="ActionsKeyLabel" Text="Key for Actions" VerticalAlignment="Center" />
+                    <ComboBox x:Name="ActionsKeyBox" Grid.Column="1" />
+                </Grid>
+                <TextBlock x:Name="KeyWarning" Text="Each mode needs a different key." Foreground="#C62828"
+                           Margin="0,4,0,0" Visibility="Collapsed" />
+            </StackPanel>
+        </Border>
+
+        <!-- Output -->
+        <Border Style="{StaticResource Card}">
+            <StackPanel>
+                <TextBlock x:Name="OutputHeader" Style="{StaticResource Header}" Text="Output" />
+                <RadioButton x:Name="NextToOriginal" GroupName="Out" Content="Save next to the original file" />
+                <RadioButton x:Name="ToFolder" GroupName="Out" Content="Save everything in this folder:" />
+                <Grid Margin="20,4,0,4">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition /><ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBox x:Name="FolderBox" Padding="5,3" IsReadOnly="True" />
+                    <Button x:Name="BrowseButton" Grid.Column="1" Content="Browse…" Margin="8,0,0,0" Padding="12,3" />
+                </Grid>
+                <Grid Style="{StaticResource Row}" Margin="0,10,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" /><ColumnDefinition /><ColumnDefinition Width="50" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock x:Name="QualityLabel" Text="Image quality (JPG, WebP, AVIF)" VerticalAlignment="Center" Margin="0,0,12,0" />
+                    <Slider x:Name="QualitySlider" Grid.Column="1" Minimum="40" Maximum="100" TickFrequency="5"
+                            IsSnapToTickEnabled="True" VerticalAlignment="Center" />
+                    <TextBlock x:Name="QualityValue" Grid.Column="2" Text="90" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                </Grid>
+            </StackPanel>
+        </Border>
+
+        <!-- Engines -->
+        <Border Style="{StaticResource Card}">
+            <StackPanel>
+                <TextBlock x:Name="EnginesHeader" Style="{StaticResource Header}" Text="Engines" />
+                <ItemsControl x:Name="EngineList" />
+            </StackPanel>
+        </Border>
+
+        <!-- Buttons -->
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,4,0,0">
+            <Button x:Name="SaveButton" Content="Save" IsDefault="True" MinWidth="100" Padding="12,6" Margin="0,0,8,0"
+                    Background="{StaticResource Accent}" Foreground="White" BorderBrush="{StaticResource Accent}" FontWeight="SemiBold" />
+            <Button x:Name="CancelButton" Content="Cancel" IsCancel="True" MinWidth="100" Padding="12,6" />
+        </StackPanel>
+    </StackPanel>
+</Window>
