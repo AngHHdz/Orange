@@ -37,6 +37,7 @@
         </Style>
     </Window.Resources>
 
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
     <StackPanel Margin="18">
         <!-- Title -->
         <StackPanel Orientation="Horizontal" Margin="2,0,0,14">
@@ -131,6 +132,23 @@
             </StackPanel>
         </Border>
 
+        <!-- Phone -->
+        <Border Style="{StaticResource Card}">
+            <StackPanel>
+                <TextBlock x:Name="PhoneHeader" Style="{StaticResource Header}" Text="Phone (Wi-Fi sharing)" />
+                <CheckBox x:Name="PhoneBox" Content="Share files with my phone over Wi-Fi" />
+                <TextBlock x:Name="InboxLabel" Text="Files from the phone go to:" Margin="0,8,0,4" />
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition /><ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBox x:Name="InboxBox" Padding="5,3" IsReadOnly="True" />
+                    <Button x:Name="InboxBrowse" Grid.Column="1" Content="Browse…" Margin="8,0,0,0" Padding="12,3" />
+                </Grid>
+                <Button x:Name="PairButton" Content="Connect phone…" HorizontalAlignment="Left" Margin="0,10,0,0" Padding="12,4" />
+            </StackPanel>
+        </Border>
+
         <!-- Engines -->
         <Border Style="{StaticResource Card}">
             <StackPanel>
@@ -146,4 +164,5 @@
             <Button x:Name="CancelButton" Content="Cancel" IsCancel="True" MinWidth="100" Padding="12,6" />
         </StackPanel>
     </StackPanel>
+    </ScrollViewer>
 </Window>

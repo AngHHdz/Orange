@@ -28,6 +28,7 @@ public partial class SettingsWindow : Window
     private SettingsWindow()
     {
         InitializeComponent();
+        MaxHeight = SystemParameters.WorkArea.Height - 40; // scroll instead of running off small screens
         var s = Settings.Current;
 
         LanguageBox.ItemsSource = Loc.Languages;
@@ -53,6 +54,15 @@ public partial class SettingsWindow : Window
         ToFolder.IsChecked = s.Output == OutputMode.Folder;
         FolderBox.Text = s.OutputFolder;
         BrowseButton.Click += (_, _) => Browse();
+
+        PhoneBox.IsChecked = s.PhoneSharing;
+        InboxBox.Text = s.PhoneInboxOrDefault;
+        InboxBrowse.Click += (_, _) =>
+        {
+            var dlg = new Microsoft.Win32.OpenFolderDialog { Title = Loc.In(Lang, "Files from the phone go to:") };
+            if (dlg.ShowDialog(this) == true) InboxBox.Text = dlg.FolderName;
+        };
+        PairButton.Click += (_, _) => PairWindow.ShowSingle();
 
         SaveButton.Click += (_, _) => Save();
         ApplyTexts();
@@ -80,6 +90,11 @@ public partial class SettingsWindow : Window
         ToFolder.Content = T("Save everything in this folder:");
         BrowseButton.Content = T("Browse…");
         QualityLabel.Text = T("Image quality (JPG, WebP, AVIF)");
+        PhoneHeader.Text = T("Phone (Wi-Fi sharing)");
+        PhoneBox.Content = T("Share files with my phone over Wi-Fi");
+        InboxLabel.Text = T("Files from the phone go to:");
+        InboxBrowse.Content = T("Browse…");
+        PairButton.Content = T("Connect phone…");
         EnginesHeader.Text = T("Engines");
         SaveButton.Content = T("Save");
         CancelButton.Content = T("Cancel");
@@ -156,7 +171,11 @@ public partial class SettingsWindow : Window
         s.Output = ToFolder.IsChecked == true ? OutputMode.Folder : OutputMode.NextToOriginal;
         s.OutputFolder = FolderBox.Text;
         s.ImageQuality = (int)QualitySlider.Value;
+        s.PhoneSharing = PhoneBox.IsChecked == true;
+        s.PhoneInbox = InboxBox.Text;
+        bool phoneChanged = s.PhoneSharing != Settings.Current.PhoneSharing;
         Settings.Save(s);
+        if (phoneChanged) _ = Orange.Core.Share.PhoneBridge.RestartAsync(); // starts or stops the server
 
         Autostart.Set(AutostartBox.IsChecked == true);
         Close();

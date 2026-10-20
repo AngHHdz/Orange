@@ -20,6 +20,16 @@ public sealed class Settings
     public int ImageQuality { get; set; } = 90;
     public bool Notifications { get; set; } = true;
 
+    // Phone sharing ("AirDrop" over Wi-Fi)
+    public bool PhoneSharing { get; set; } = true;
+    public int PhonePort { get; set; } = 8765;
+    public string PhoneToken { get; set; } = "";
+    public string PhoneInbox { get; set; } = "";
+
+    /// <summary>Where files from the phone land (default: Downloads\From iPhone).</summary>
+    public string PhoneInboxOrDefault => Directory.Exists(PhoneInbox) ? PhoneInbox
+        : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads", "From iPhone");
+
     private static readonly string FilePath = Path.Combine(Paths.AppData, "settings.json");
     private static readonly JsonSerializerOptions Json = new() { WriteIndented = true, Converters = { new JsonStringEnumConverter() } };
 
@@ -44,16 +54,26 @@ public sealed class Settings
 
     private static Settings Load()
     {
+        Settings? s = null;
         try
         {
             if (File.Exists(FilePath))
-                return Sanitize(JsonSerializer.Deserialize<Settings>(File.ReadAllText(FilePath), Json) ?? new Settings());
+                s = JsonSerializer.Deserialize<Settings>(File.ReadAllText(FilePath), Json);
         }
         catch (Exception ex)
         {
             JobRunner.Log($"Could not read settings, using defaults: {ex.Message}");
         }
-        return new Settings();
+
+        s ??= new Settings();
+        bool newToken = s.PhoneToken.Length < 16;
+        s = Sanitize(s);
+        // Keep a freshly generated phone key, or the QR code would change on every start.
+        if (newToken)
+        {
+            try { File.WriteAllText(FilePath, JsonSerializer.Serialize(s, Json)); } catch { }
+        }
+        return s;
     }
 
     public static void Save(Settings updated)
@@ -65,10 +85,16 @@ public sealed class Settings
 
     public Settings Clone() => (Settings)MemberwiseClone();
 
+    public static string NewToken() =>
+        Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(18)).Replace('+', '-').Replace('/', '_');
+
     private static Settings Sanitize(Settings s)
     {
         s.WheelScale = Math.Clamp(s.WheelScale, 0.5, 1.2);
         s.ImageQuality = Math.Clamp(s.ImageQuality, 40, 100);
+        if (s.PhonePort is < 1024 or > 65535) s.PhonePort = 8765;
+        // The secret key in the QR code. Generated once; "New key" in the pairing window replaces it.
+        if (s.PhoneToken.Length < 16) s.PhoneToken = NewToken();
         if (!Loc.Languages.ContainsKey(s.Language)) s.Language = "en";
         // Every mode needs its own key; fall back to the defaults if two collide.
         if (s.ConvertKey == s.ToolsKey || s.ToolsKey == s.ActionsKey || s.ConvertKey == s.ActionsKey)

@@ -10,6 +10,9 @@ public static class JobRunner
 
     public static string? LastOutput { get; private set; }
 
+    /// <summary>Makes a click on the next notification open this file's folder.</summary>
+    public static void Remember(string path) => LastOutput = path;
+
     /// <summary>Runs <paramref name="work"/> for every file (one at a time) and notifies when done.</summary>
     public static Func<IReadOnlyList<string>, Task> PerFile(string verb, Func<string, Task<string>> work) => async files =>
     {

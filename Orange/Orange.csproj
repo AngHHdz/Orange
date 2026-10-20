@@ -25,7 +25,13 @@
     <PackageReference Include="PdfPig" Version="0.1.16" />
     <!-- Pinned: 6.2.4 is the last MIT release. 6.5+ is AGPL/commercial and refuses to run without a license. -->
     <PackageReference Include="PDFsharp" Version="6.2.4" />
+    <PackageReference Include="QRCoder" Version="1.8.1" />
     <PackageReference Include="SharpCompress" Version="0.50.7" />
+  </ItemGroup>
+
+  <!-- Kestrel web server for phone sharing over Wi-Fi (part of .NET, nothing extra to install). -->
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
 
 </Project>

@@ -49,6 +49,7 @@ public partial class App : Application
 
         CreateTray();
         Settings.Changed += BuildTrayMenu; // new language → new menu texts
+        _ = Orange.Core.Share.PhoneBridge.StartAsync();
 
         var s = Settings.Current;
         Notify(Loc.T("Orange is running"), Loc.F("Drag a file and press {0} (convert), {1} (tools) or {2} (actions).",
@@ -71,6 +72,7 @@ public partial class App : Application
     {
         var menu = new Forms.ContextMenuStrip();
         menu.Items.Add(Loc.T("Convert files…"), null, (_, _) => PickAndShowMenu());
+        menu.Items.Add(Loc.T("Connect phone…"), null, (_, _) => PairWindow.ShowSingle());
         menu.Items.Add(Loc.T("Settings…"), null, (_, _) => SettingsWindow.ShowSingle());
         menu.Items.Add(Loc.T("Open output log"), null, (_, _) => JobRunner.OpenLog());
         menu.Items.Add(new Forms.ToolStripSeparator());
@@ -107,6 +109,8 @@ public partial class App : Application
     protected override void OnExit(ExitEventArgs e)
     {
         _watcher?.Dispose();
+        // Off the UI thread: waiting here for a task that needs the UI thread would deadlock.
+        Task.Run(Orange.Core.Share.PhoneBridge.StopAsync).Wait(2000);
         if (_tray != null)
         {
             _tray.Visible = false;

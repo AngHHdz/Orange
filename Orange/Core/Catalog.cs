@@ -217,6 +217,13 @@ public static class Catalog
 
     private static IEnumerable<WheelItem> ActionItems(FileKind kind, IReadOnlyList<string> paths)
     {
+        if (Settings.Current.PhoneSharing)
+            yield return new WheelItem("iPhone", "send over Wi-Fi", files =>
+            {
+                Share.PhoneBridge.Send(files);
+                return Task.CompletedTask;
+            }, OnUiThread: true);
+
         yield return new WheelItem("Copy", "to clipboard", files =>
         {
             var list = new System.Collections.Specialized.StringCollection();
