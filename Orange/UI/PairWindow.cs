@@ -97,9 +97,9 @@ public sealed class PairWindow : Window
             Content = Steps(
                 Loc.T("In the Shortcuts app tap +, name it “Send to Orange”."),
                 Loc.T("Tap ⓘ and turn on “Show in Share Sheet”."),
-                Loc.T("Add the action “Get Contents of URL”, with this URL:"),
+                Loc.T("Add “Repeat with Each” (Shortcut Input). Inside it, add “Get Contents of URL” with the address from the Orange page on your phone (Copy button)."),
                 $"http://{PhoneBridge.LanAddress()}:{Settings.Current.PhonePort}/api/upload?k={Settings.Current.PhoneToken}",
-                Loc.T("Method: POST · Request Body: Form · add a File field named “file” = Shortcut Input."),
+                Loc.T("Method: POST · Request Body: Form · add a File field named “file” = Repeat Item."),
                 Loc.T("Done. In Photos or Files, tap Share → Send to Orange.")),
         };
         root.Children.Add(shortcut);

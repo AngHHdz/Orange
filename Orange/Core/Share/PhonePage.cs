@@ -6,7 +6,8 @@ namespace Orange.Core.Share;
 /// <summary>The single web page the phone sees. Self-contained (no external scripts), dark, thumb-friendly.</summary>
 public static class PhonePage
 {
-    public static string Render(string token)
+    /// <param name="host">"192.168.0.181:8765" as the phone reached us — used to build the Shortcut URL.</param>
+    public static string Render(string token, string host)
     {
         string T(string s) => WebUtility.HtmlEncode(Loc.T(s));
         // Strings the script needs, JSON-encoded so quotes and accents are safe.
@@ -26,6 +27,11 @@ public static class PhonePage
             .Replace("{{sendHint}}", T("Photos, videos or any file"))
             .Replace("{{fromPc}}", T("From your PC"))
             .Replace("{{homeTip}}", T("Tip: tap Share, then “Add to Home Screen” to keep Orange one tap away."))
+            .Replace("{{shortcutTitle}}", T("Share-menu shortcut"))
+            .Replace("{{shortcutHint}}", T("Paste this address in the “Get Contents of URL” action:"))
+            .Replace("{{copy}}", T("Copy"))
+            .Replace("{{copied}}", T("Copied ✓"))
+            .Replace("{{uploadUrl}}", WebUtility.HtmlEncode($"http://{host}/api/upload?k={Uri.EscapeDataString(token)}"))
             .Replace("{{data}}", js);
     }
 
@@ -87,6 +93,13 @@ public static class PhonePage
 
 <p class="tip" id="tip">{{homeTip}}</p>
 
+<h2>{{shortcutTitle}}</h2>
+<div class="list"><div class="row" style="flex-wrap:wrap">
+  <span class="sub" style="width:100%">{{shortcutHint}}</span>
+  <input id="sc" readonly value="{{uploadUrl}}" style="flex:1;min-width:0;border:0;border-radius:8px;padding:8px;background:#34343a;color:var(--text);font:12px ui-monospace,Menlo,monospace">
+  <button class="btn primary" id="copyBtn" data-done="{{copied}}">{{copy}}</button>
+</div></div>
+
 <script>
 const D = {{data}};
 const api = p => p + (p.includes('?') ? '&' : '?') + 'k=' + encodeURIComponent(D.key);
@@ -145,6 +158,16 @@ function upload(file) {
 document.getElementById('picker').addEventListener('change', async e => {
   for (const f of e.target.files) await upload(f);   // one at a time: kinder to Wi-Fi
   e.target.value = '';
+});
+
+// The page is plain http on the LAN, where navigator.clipboard is unavailable — select + execCommand still works on iOS.
+document.getElementById('copyBtn').addEventListener('click', e => {
+  const sc = document.getElementById('sc');
+  sc.focus(); sc.setSelectionRange(0, sc.value.length);
+  let ok = false;
+  try { ok = document.execCommand('copy'); } catch (err) {}
+  sc.blur();
+  if (ok) e.target.textContent = e.target.dataset.done;
 });
 
 load();

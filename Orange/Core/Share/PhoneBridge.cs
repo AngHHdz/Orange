@@ -62,7 +62,7 @@ public static class PhoneBridge
             {
                 ctx.Response.ContentType = "text/html; charset=utf-8";
                 ctx.Response.Headers.CacheControl = "no-store";
-                return ctx.Response.WriteAsync(PhonePage.Render(Settings.Current.PhoneToken));
+                return ctx.Response.WriteAsync(PhonePage.Render(Settings.Current.PhoneToken, ctx.Request.Host.Value ?? ""));
             });
             app.MapGet("/icon.png", ctx =>
             {

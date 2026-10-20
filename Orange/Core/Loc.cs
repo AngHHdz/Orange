@@ -137,6 +137,10 @@ public static class Loc
             ["Open"] = "Abrir", ["Download"] = "Descargar", ["Remove"] = "Quitar", ["Sending"] = "Enviando", ["Sent"] = "Enviado", ["Failed"] = "Error",
             ["Nothing here yet. On the PC, drag a file, press {0} and drop it on “iPhone”."] = "Nada todavía. En la PC, arrastra un archivo, pulsa {0} y suéltalo en “iPhone”.",
             ["Wi-Fi sharing with {0}"] = "Compartir por Wi-Fi con {0}", ["Send to PC"] = "Enviar a la PC", ["Photos, videos or any file"] = "Fotos, videos o cualquier archivo",
+            ["Share-menu shortcut"] = "Atajo del menú Compartir", ["Paste this address in the “Get Contents of URL” action:"] = "Pega esta dirección en la acción “Obtener contenido de URL”:",
+            ["Copy"] = "Copiar", ["Copied ✓"] = "Copiado ✓",
+            ["Add “Repeat with Each” (Shortcut Input). Inside it, add “Get Contents of URL” with the address from the Orange page on your phone (Copy button)."] = "Agrega “Repetir con cada uno” (Entrada del atajo). Dentro, agrega “Obtener contenido de URL” con la dirección de la página de Orange en tu teléfono (botón Copiar).",
+            ["Method: POST · Request Body: Form · add a File field named “file” = Repeat Item."] = "Método: POST · Cuerpo: Formulario · agrega un campo Archivo llamado “file” = Elemento repetido.",
             ["From your PC"] = "Desde tu PC", ["Tip: tap Share, then “Add to Home Screen” to keep Orange one tap away."] = "Consejo: toca Compartir y luego “Agregar a inicio” para tener Orange a un toque.",
         },
 
@@ -252,6 +256,10 @@ public static class Loc
             ["Open"] = "Abrir", ["Download"] = "Baixar", ["Remove"] = "Remover", ["Sending"] = "Enviando", ["Sent"] = "Enviado", ["Failed"] = "Erro",
             ["Nothing here yet. On the PC, drag a file, press {0} and drop it on “iPhone”."] = "Nada ainda. No PC, arraste um arquivo, pressione {0} e solte em “iPhone”.",
             ["Wi-Fi sharing with {0}"] = "Compartilhando por Wi-Fi com {0}", ["Send to PC"] = "Enviar ao PC", ["Photos, videos or any file"] = "Fotos, vídeos ou qualquer arquivo",
+            ["Share-menu shortcut"] = "Atalho do menu Compartilhar", ["Paste this address in the “Get Contents of URL” action:"] = "Cole este endereço na ação “Obter Conteúdo da URL”:",
+            ["Copy"] = "Copiar", ["Copied ✓"] = "Copiado ✓",
+            ["Add “Repeat with Each” (Shortcut Input). Inside it, add “Get Contents of URL” with the address from the Orange page on your phone (Copy button)."] = "Adicione “Repetir com cada item” (Entrada do Atalho). Dentro dele, adicione “Obter Conteúdo da URL” com o endereço da página do Orange no celular (botão Copiar).",
+            ["Method: POST · Request Body: Form · add a File field named “file” = Repeat Item."] = "Método: POST · Corpo da Solicitação: Formulário · adicione um campo Arquivo chamado “file” = Item da Repetição.",
             ["From your PC"] = "Do seu PC", ["Tip: tap Share, then “Add to Home Screen” to keep Orange one tap away."] = "Dica: toque em Compartilhar e depois em “Adicionar à Tela de Início” para ter o Orange a um toque.",
         },
     };
