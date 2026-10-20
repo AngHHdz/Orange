@@ -13,10 +13,10 @@ public static class IconFactory
         return Icon.FromHandle(bmp.GetHicon());
     }
 
-    /// <summary>Square PNG on a dark background (iPhone home-screen icon).</summary>
-    public static byte[] CreatePng(int size)
+    /// <summary>Square PNG: on a dark background (iPhone home-screen icon) or transparent (Windows .ico frames).</summary>
+    public static byte[] CreatePng(int size, bool transparent = false)
     {
-        using var bmp = Draw(size, transparent: false);
+        using var bmp = Draw(size, transparent);
         using var ms = new MemoryStream();
         bmp.Save(ms, ImageFormat.Png);
         return ms.ToArray();

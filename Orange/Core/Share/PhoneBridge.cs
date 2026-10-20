@@ -102,7 +102,8 @@ public static class PhoneBridge
                 Remove(id);
                 return Results.NoContent();
             });
-            app.MapPost("/api/upload", ReceiveAsync);
+            // Cast to Delegate so it's treated as a route handler and the IResult is written (not discarded).
+            app.MapPost("/api/upload", (Delegate)ReceiveAsync);
 
             await app.StartAsync();
             _server = app;

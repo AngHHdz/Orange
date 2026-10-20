@@ -10,7 +10,13 @@ public enum OutputMode { NextToOriginal, Folder }
 /// <summary>User preferences, stored as JSON in %LOCALAPPDATA%\Orange\settings.json.</summary>
 public sealed class Settings
 {
-    public string Language { get; set; } = "en";
+    // First run: follow the Windows display language when Orange speaks it.
+    public string Language { get; set; } = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName switch
+    {
+        "es" => "es",
+        "pt" => "pt",
+        _ => "en",
+    };
     public double WheelScale { get; set; } = 0.8;
     public ModKey ConvertKey { get; set; } = ModKey.Shift;
     public ModKey ToolsKey { get; set; } = ModKey.Ctrl;

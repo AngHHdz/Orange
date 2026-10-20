@@ -12,6 +12,12 @@
     <AssemblyName>Orange</AssemblyName>
     <RootNamespace>Orange</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\orange.ico</ApplicationIcon>
+
+    <Version>1.0.0</Version>
+    <Product>Orange</Product>
+    <Description>Orange — file converter and phone sharing</Description>
+    <Copyright>© 2026 koko</Copyright>
   </PropertyGroup>
 
   <!-- WinForms is only used for the tray icon; keep its names out of the global scope. -->
