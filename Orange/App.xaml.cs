@@ -57,6 +57,9 @@ public partial class App : Application
         var menu = new Forms.ContextMenuStrip();
         menu.Items.Add("Convert files…", null, (_, _) => PickAndShowMenu());
         menu.Items.Add("Open output log", null, (_, _) => JobRunner.OpenLog());
+        var autostart = new Forms.ToolStripMenuItem("Start with Windows") { Checked = Autostart.IsEnabled, CheckOnClick = true };
+        autostart.CheckedChanged += (_, _) => Autostart.Set(autostart.Checked);
+        menu.Items.Add(autostart);
         menu.Items.Add(new Forms.ToolStripSeparator());
         menu.Items.Add("Quit Orange", null, (_, _) => Shutdown());
 
