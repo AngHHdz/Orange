@@ -1,6 +1,8 @@
+vendor/
 publish/
 dist/
 bin/
 obj/
 .vs/
 *.user
+Nuevo Documento de Texto.txt
