@@ -1,0 +1,10 @@
+<Application x:Class="Orange.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             ShutdownMode="OnExplicitShutdown">
+    <Application.Resources>
+        <SolidColorBrush x:Key="OrangeAccent" Color="#FF8A1F" />
+        <SolidColorBrush x:Key="WheelBg" Color="#E61E1E22" />
+        <SolidColorBrush x:Key="WheelText" Color="#F2F2F2" />
+    </Application.Resources>
+</Application>
