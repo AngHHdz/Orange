@@ -26,6 +26,9 @@ public sealed class Settings
     public int ImageQuality { get; set; } = 90;
     public bool Notifications { get; set; } = true;
 
+    /// <summary>Drags only open the wheel when they start in one of these processes (browsers etc. are left alone).</summary>
+    public List<string> DragSourceApps { get; set; } = ["explorer.exe"];
+
     // Updates
     public bool AutoCheckUpdates { get; set; } = true;
 
@@ -105,6 +108,7 @@ public sealed class Settings
         // The secret key in the QR code. Generated once; "New key" in the pairing window replaces it.
         if (s.PhoneToken.Length < 16) s.PhoneToken = NewToken();
         if (!Loc.Languages.ContainsKey(s.Language)) s.Language = "en";
+        if (s.DragSourceApps is not { Count: > 0 }) s.DragSourceApps = ["explorer.exe"];
         // Every mode needs its own key; fall back to the defaults if two collide.
         if (s.ConvertKey == s.ToolsKey || s.ToolsKey == s.ActionsKey || s.ConvertKey == s.ActionsKey)
             (s.ConvertKey, s.ToolsKey, s.ActionsKey) = (ModKey.Shift, ModKey.Ctrl, ModKey.Alt);

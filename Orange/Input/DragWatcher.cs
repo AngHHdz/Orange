@@ -7,6 +7,7 @@ namespace Orange.Input;
 /// <summary>
 /// Watches the global mouse and keyboard. When the left button is held and moved past the
 /// system drag threshold (a drag is in progress) and a mode key is pressed, it asks for the wheel.
+/// Only drags that start in an app from Settings.DragSourceApps (Explorer by default) are watched.
 ///   Shift → Convert, Ctrl → Tools, Alt → Actions, Esc → cancel.
 /// </summary>
 public sealed class DragWatcher : IDisposable
@@ -54,7 +55,8 @@ public sealed class DragWatcher : IDisposable
                 case Native.WM_RBUTTONDOWN:
                     if ((int)wParam == Native.WM_LBUTTONDOWN)
                     {
-                        _buttonDown = true;
+                        // Only drags that start in an allowed app (Explorer by default) count.
+                        _buttonDown = IsAllowedSource(info.pt);
                         _dragging = false;
                         _downPt = info.pt;
                     }
@@ -144,6 +146,10 @@ public sealed class DragWatcher : IDisposable
         };
         return key is { } k ? Settings.Current.ModeFor(k) : null;
     }
+
+    private static bool IsAllowedSource(Native.POINT p) =>
+        Native.ProcessNameAt(p) is { } name &&
+        Settings.Current.DragSourceApps.Contains(name, StringComparer.OrdinalIgnoreCase);
 
     private static WheelMode? HeldMode()
     {

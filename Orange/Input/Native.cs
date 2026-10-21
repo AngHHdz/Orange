@@ -86,5 +86,39 @@ internal static class Native
     [DllImport("user32.dll")]
     public static extern bool SetWindowPos(IntPtr hWnd, IntPtr after, int x, int y, int cx, int cy, uint flags);
 
+    [DllImport("user32.dll")]
+    public static extern IntPtr WindowFromPoint(POINT p);
+
+    [DllImport("user32.dll")]
+    public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint processId);
+
+    public const uint PROCESS_QUERY_LIMITED_INFORMATION = 0x1000;
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    public static extern IntPtr OpenProcess(uint access, bool inherit, uint processId);
+
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    public static extern bool QueryFullProcessImageName(IntPtr hProcess, int flags, System.Text.StringBuilder name, ref int size);
+
+    [DllImport("kernel32.dll")]
+    public static extern bool CloseHandle(IntPtr h);
+
     public static bool IsDown(int vk) => (GetAsyncKeyState(vk) & 0x8000) != 0;
+
+    /// <summary>File name (e.g. "explorer.exe") of the process that owns the window under a screen point, or null.</summary>
+    public static string? ProcessNameAt(POINT p)
+    {
+        var hwnd = WindowFromPoint(p);
+        if (hwnd == IntPtr.Zero) return null;
+        GetWindowThreadProcessId(hwnd, out uint pid);
+        var h = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, pid);
+        if (h == IntPtr.Zero) return null;
+        try
+        {
+            var sb = new System.Text.StringBuilder(1024);
+            int size = sb.Capacity;
+            return QueryFullProcessImageName(h, 0, sb, ref size) ? Path.GetFileName(sb.ToString()) : null;
+        }
+        finally { CloseHandle(h); }
+    }
 }
